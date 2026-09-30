@@ -1,0 +1,919 @@
+﻿<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tool EP diagnosi">
+<meta name="theme-color" content="#FAF9F7">
+<script data-iphone="sentinella">
+(function(){
+var h=document.documentElement, msg="";
+function ha(c){ return (" "+h.className+" ").indexOf(" "+c+" ")>=0; }
+// L'errore puo' arrivare prima che l'avviso esista — uno script in <head> che
+// non si lascia leggere —: il messaggio si tiene da parte e si scrive quando
+// la pagina c'e'.
+function scrivi(){
+  var e=document.getElementById("nmerr");
+  if(e&&msg) e.textContent="Errore del motore: "+msg;
+}
+function ko(m){
+  if(m&&!msg) msg=m;
+  if(!ha("motore-ko")) h.className+=" motore-ko";
+  scrivi();
+}
+h.className+=" js";
+window.onerror=function(m,src,riga,col){
+  m=String(m);
+  if(/^Script error\.?$/.test(m)) m="il browser non ne mostra il dettaglio (\u00abScript error.\u00bb)";
+  ko(m+(riga?" (riga "+riga+(col?", colonna "+col:"")+")":""));
+};
+document.addEventListener("DOMContentLoaded",function(){
+  if(!ha("motore-ok")) ko(msg||"il motore non ha completato l'avvio"); else scrivi();
+});
+})();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+<title>EP sospetta — probabilità, PERC, YEARS e D-dimero</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --bg:#FFFFFF; --surface:#FFFFFF; --surface-alt:#F7F7F5;
+    --border:rgba(11,11,11,0.10); --border-strong:rgba(11,11,11,0.18);
+    --text-primary:#0B0B0B; --text-secondary:#52514E; --text-muted:#76746F;
+    --accent-blue:#2A78D6;   --accent-blue-bg:#E6F1FB;   --accent-blue-border:#B5D4F4;
+    --accent-amber:#BA7517;  --accent-amber-bg:#FAEEDA;  --accent-amber-border:#FAC775;
+    --accent-red:#A32D2D;    --accent-red-bg:#FCEBEB;    --accent-red-border:#F7C1C1;
+    --accent-green:#3B6D11;  --accent-green-bg:#EAF3DE;  --accent-green-border:#C0DD97;
+    --accent-teal:#0E7C86;   --accent-teal-bg:#E2F4F5;   --accent-teal-border:#A7DBDE;
+    --accent-purple:#534AB7; --accent-purple-bg:#EEEDFE; --accent-purple-border:#CECBF6;
+    --pill-gray-bg:#F1EFE8;  --pill-gray-fg:#444441;
+    --cor-1:#3B8E5A; --cor-2a:#E0A82E; --cor-2b:#DE7E3C; --cor-3nb:#CE6D86; --cor-3h:#B33A3A;
+    --k0:#2E7D4F; --k0-bg:#E2F3E8; --k0-bd:#A6D9B8;
+    --k1:#2A78D6; --k1-bg:#E3EFFB; --k1-bd:#A9CBF1;
+    --k2:#8A6A00; --k2-bg:#FBF3C8; --k2-bd:#EBD56C;
+    --k3:#B45309; --k3-bg:#FDEBD8; --k3-bd:#F4BD85;
+    --k4:#A32D2D; --k4-bg:#FCE3E3; --k4-bd:#F0A9A9;
+    --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --mono:ui-monospace,'SFMono-Regular',Consolas,'Courier New',monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#111418; --surface:#181C22; --surface-alt:#20252D;
+      --border:rgba(255,255,255,.10); --border-strong:rgba(255,255,255,.19);
+      --text-primary:#E7EAEE; --text-secondary:#B8BEC7; --text-muted:#949BA5;
+      --accent-blue:#72AAEE;   --accent-blue-bg:#18283A;   --accent-blue-border:#2E4B6C;
+      --accent-amber:#E3A94F;  --accent-amber-bg:#30250F;  --accent-amber-border:#5D4719;
+      --accent-red:#EF8E8E;    --accent-red-bg:#361B1B;    --accent-red-border:#6B3232;
+      --accent-green:#95C873;  --accent-green-bg:#1C2A13;  --accent-green-border:#3C5626;
+      --accent-teal:#5FC2CB;   --accent-teal-bg:#12292B;   --accent-teal-border:#2B5558;
+      --accent-purple:#ADA6F2; --accent-purple-bg:#23213B; --accent-purple-border:#454077;
+      --pill-gray-bg:#2A2F37;  --pill-gray-fg:#C9CED6;
+      --k0:#8FD3A8; --k0-bg:#132B1D; --k0-bd:#2D5A3E;
+      --k1:#8EC0F5; --k1-bg:#16283C; --k1-bd:#2F5378;
+      --k2:#EDD36A; --k2-bg:#2C260C; --k2-bd:#5E5120;
+      --k3:#F3B27A; --k3-bg:#33210F; --k3-bd:#6B4524;
+      --k4:#F29A9A; --k4-bg:#361B1B; --k4-bd:#6B3232;
+      color-scheme:dark;
+    }
+  }
+  body { font-family:var(--font); background:var(--bg); color:var(--text-primary); font-size:14.5px; line-height:1.65; -webkit-font-smoothing:antialiased; }
+  .page { max-width:920px; margin:0 auto; padding:0 16px 4rem; }
+  strong, b { font-weight:600; }
+  .muted { color:var(--text-muted); }
+
+  /* ── intestazione, come in tool_ep ── */
+  .kicker { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); margin:1.4rem 0 8px; }
+  .headline { font-size:26px; font-weight:600; line-height:1.22; margin-bottom:10px; }
+  .oneline { font-size:13.5px; color:var(--text-secondary); line-height:1.65; margin-bottom:.9rem; }
+  .oneline strong { color:var(--text-primary); }
+  .meta-row { display:flex; flex-wrap:wrap; gap:6px 8px; font-size:12px; margin-bottom:1rem; }
+  .meta-chip { background:var(--surface); border:1px solid var(--border-strong); border-radius:12px; padding:2px 10px; color:var(--text-secondary); overflow-wrap:anywhere; }
+  .meta-chip strong { color:var(--text-primary); }
+
+  /* ── barra sticky ── */
+  .bar { position:-webkit-sticky;position:sticky; top:0; z-index:30; background:var(--bg); border-bottom:1px solid var(--border-strong);
+         margin:0 -16px 1rem; padding:8px 16px; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+  .bar .lbl { font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--text-muted); }
+  .bar .sp { flex:1 1 auto; }
+  .btn { font:600 12px var(--font); padding:6px 12px; border-radius:99px; border:1px solid var(--border-strong); background:var(--surface); color:var(--text-secondary); cursor:pointer; }
+  .btn:hover { border-color:var(--accent-blue); color:var(--accent-blue); }
+
+  /* ── tappe e campi ── */
+  .stage { display:flex; align-items:center; gap:10px; margin:1.8rem 0 .6rem; }
+  .stage-n { width:29px; height:29px; border-radius:50%; background:var(--text-primary); color:var(--bg);
+             font-weight:700; font-size:13.5px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .stage-t { font-size:16.5px; font-weight:700; line-height:1.25; }
+  .stage-w { margin-left:auto; font-size:11.5px; color:var(--text-muted); background:var(--surface-alt); border-radius:99px; padding:3px 10px; text-align:right; }
+  .card { background:var(--surface); border:1px solid var(--border-strong); border-radius:12px; padding:13px 15px; margin-bottom:12px; }
+  .card h3 { font-size:13px; font-weight:600; letter-spacing:.02em; margin-bottom:8px; color:var(--text-secondary); }
+  .row { display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; margin-bottom:10px; }
+  .row:last-child { margin-bottom:0; }
+  .fl { font-size:12.5px; font-weight:600; color:var(--text-secondary); min-width:150px; }
+  .fl small { display:block; font-weight:400; color:var(--text-muted); font-size:11.5px; }
+  input[type=number] { font:600 15px var(--font); color:var(--text-primary); background:var(--surface); border:1px solid var(--border-strong); border-radius:8px; padding:6px 9px; width:104px; text-align:center; }
+  .seg { display:inline-flex; flex-wrap:wrap; border:1px solid var(--border-strong); border-radius:10px; overflow:hidden; max-width:100%; }
+  .seg label { position:relative; cursor:pointer; }
+  .seg input { position:absolute; opacity:0; width:1px; height:1px; }
+  .seg span { display:block; padding:6px 12px; font-size:13px; font-weight:500; color:var(--text-secondary); border-right:1px solid var(--border); }
+  .seg label:last-child span { border-right:none; }
+  .seg input:checked + span { background:var(--accent-teal); color:#FFFFFF; }
+  .seg input:focus-visible + span { outline:2px solid var(--accent-blue); outline-offset:-2px; }
+  .chk { display:flex; align-items:flex-start; gap:9px; padding:6px 0; font-size:14px; line-height:1.45; border-bottom:1px dashed var(--border); cursor:pointer; }
+  .chk:last-child { border-bottom:none; }
+  .chk input { margin-top:3px; width:17px; height:17px; flex:0 0 auto; accent-color:var(--accent-teal); }
+  .chk small { display:block; color:var(--text-muted); font-size:12px; }
+  .tag { display:inline-block; font-size:10px; font-weight:700; letter-spacing:.03em; padding:0 6px; border-radius:99px; margin-left:4px;
+         background:var(--pill-gray-bg); color:var(--pill-gray-fg); vertical-align:1px; white-space:nowrap; }
+  .due { display:grid; grid-template-columns:1fr 1fr; gap:0 18px; }
+  .sublbl { font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--text-muted); margin:12px 0 2px; }
+  .hide { display:none !important; }
+
+  /* ── uscite ── */
+  .esito { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin-bottom:4px; }
+  .cat { display:inline-block; font-size:12.5px; font-weight:600; border-radius:99px; padding:2px 10px; border:1px solid; }
+  .k0 { color:var(--k0); background:var(--k0-bg); border-color:var(--k0-bd); }
+  .k1 { color:var(--k1); background:var(--k1-bg); border-color:var(--k1-bd); }
+  .k2 { color:var(--k2); background:var(--k2-bg); border-color:var(--k2-bd); }
+  .k3 { color:var(--k3); background:var(--k3-bg); border-color:var(--k3-bd); }
+  .k4 { color:var(--k4); background:var(--k4-bg); border-color:var(--k4-bd); }
+  .kx { color:var(--text-muted); background:var(--surface-alt); border-color:var(--border-strong); }
+  .big { font-size:22px; font-weight:700; line-height:1.2; }
+  .via { font-family:var(--mono); font-size:12px; color:var(--text-secondary); margin:2px 0 8px; overflow-wrap:anywhere; }
+
+  /* pill COR/LOE come in tool_ep: AHA 1/2a/2b/3: No Benefit/3: Harm, ESC I/IIa/IIb/III */
+  .cor { display:inline; min-width:26px; text-align:center; padding:1px 6px; border-radius:6px; font-weight:700; font-size:10.5px; color:#fff; vertical-align:1px; white-space:nowrap; }
+  .cor-1{background:var(--cor-1);} .cor-2a{background:var(--cor-2a);color:#3A2D00;} .cor-2b{background:var(--cor-2b);} .cor-3nb{background:var(--cor-3nb);} .cor-3h{background:var(--cor-3h);}
+  .cnc { background:var(--surface-alt); color:var(--text-secondary); border:1px solid var(--border-strong); font-weight:600; }
+  .loe { display:inline; padding:1px 7px; border-radius:99px; font-size:9.5px; font-weight:600; background:var(--pill-gray-bg); color:var(--pill-gray-fg); border:.5px solid var(--border-strong); vertical-align:1px; white-space:nowrap; }
+  .pg { font-family:var(--mono); font-size:11px; color:var(--text-muted); }
+  .lg { display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:0 7px; border-radius:99px; margin-right:5px; vertical-align:1px; }
+  .lg-aha { background:var(--accent-teal-bg); color:var(--accent-teal); border:.5px solid var(--accent-teal-border); }
+  .lg-esc { background:var(--accent-purple-bg); color:var(--accent-purple); border:.5px solid var(--accent-purple-border); }
+
+  .nota { border-left:3px solid var(--accent-amber); background:var(--accent-amber-bg); border-radius:0 8px 8px 0; padding:7px 11px; margin-top:8px; font-size:13.5px; }
+  .nota.info { border-left-color:var(--accent-blue); background:var(--accent-blue-bg); }
+  .nota.stop { border-left-color:var(--accent-red); background:var(--accent-red-bg); }
+  .nota.ok { border-left-color:var(--accent-green); background:var(--accent-green-bg); }
+  .nota.esc { border-left-color:var(--accent-purple); background:var(--accent-purple-bg); }
+  .nota strong { color:var(--text-primary); }
+  .riga { display:flex; gap:10px; padding:7px 0; border-bottom:1px dashed var(--border); }
+  .riga:last-child { border-bottom:none; }
+  .riga .ico { flex:0 0 22px; font-weight:700; text-align:center; font-family:var(--mono); font-size:13px; padding-top:1px; }
+  .riga .tx { flex:1 1 auto; font-size:14px; min-width:0; overflow-wrap:anywhere; }
+  .riga.si .ico { color:var(--k0); }
+  .riga.no .ico { color:var(--accent-red); }
+  .riga.nd .ico { color:var(--accent-amber); }
+  .riga.off .ico { color:var(--text-muted); }
+  .riga.off .tx { color:var(--text-muted); }
+  .riga.sel { background:var(--accent-teal-bg); border-radius:6px; padding-left:4px; padding-right:4px; }
+  .lista li { margin:5px 0 5px 18px; font-size:13.5px; }
+  .foot { margin-top:2.4rem; padding-top:1rem; border-top:1px solid var(--border-strong); font-size:12px; color:var(--text-muted); line-height:1.7; }
+  .foot strong { color:var(--text-secondary); }
+
+  @media (max-width:640px) {
+    .due { grid-template-columns:1fr; }
+    .headline { font-size:22px; }
+    .stage-w { display:none; }
+    .fl { min-width:0; width:100%; }
+    .big { font-size:19px; }
+  }
+  @media print { .bar { position:static; } }
+  /* TOKEN-LUNGO: una sigla o un DOI non trascinano la pagina di lato (componenti.md § 0) */
+  @media (max-width:640px) { .page { overflow-wrap:anywhere; } }
+</style>
+
+
+<style data-iphone="stile">
+/* L'avviso e' visibile per costruzione: lo nasconde solo la classe che la
+   sentinella mette quando JavaScript esiste, e lo rimostra quando il motore
+   muore. Nell'anteprima dell'iPhone nessuna delle due arriva. */
+#nomotore{background:#FCEBEB;border:1.5px solid #A32D2D;border-radius:10px;
+ padding:12px 15px;margin:0 0 1.1rem;font-size:13.5px;line-height:1.6;color:#0B0B0B;
+ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif}
+#nomotore strong{display:block;color:#A32D2D;font-size:15px;margin-bottom:4px}
+#nomotore p{margin:6px 0 0}
+#nomotore a{color:#A32D2D}
+#nomotore .nmurl{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:.92em;word-break:break-all}
+#nomotore .nmerr{display:block;font-family:'SFMono-Regular',Consolas,Menlo,monospace;
+ font-size:11.5px;color:#A32D2D;margin-top:6px;word-break:break-word}
+#nomotore .nmerr:empty{display:none}
+html.js #nomotore{display:none}
+html.js.motore-ko #nomotore{display:block}
+
+#nmprivacy{background:#E2F4F5;border:1px solid #A7DBDE;border-radius:8px;padding:9px 13px;
+ margin:0 0 1rem;font-size:12.5px;line-height:1.55;color:#0B0B0B;
+ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif}
+@media print{#nmprivacy{display:none}}
+</style>
+</head>
+<body>
+<div class="nomotore" id="nomotore" role="alert">
+ <strong>Motore di calcolo non attivo</strong>
+ <p>I calcoli, i filtri e i comandi di questa pagina <b>non funzionano</b>: dove leggi «—» non c'è un
+ valore. Il testo resta leggibile, i numeri che dipendono dai tuoi dati no. Non usare questa pagina
+ per decidere una dose.</p>
+ <p>Su iPhone e iPad succede sempre con un file salvato sul telefono: si apre nell'<b>anteprima</b> —
+ dall'app File, da Mail, da WhatsApp —, che mostra la pagina ma non esegue il motore, e Apple non
+ permette di aprirlo in Safari. Sull'iPhone il tool funziona aperto da questo indirizzo, in Safari: <a class="nmurl" href="https://francescofugetto-ai.github.io/tool-ep-diagnosi-web/">https://francescofugetto-ai.github.io/tool-ep-diagnosi-web/</a> — poi Condividi, «Aggiungi alla schermata Home». Dopo la prima apertura funziona anche senza rete. Su computer e Android basta aprire il file.</p>
+ <span class="nmerr" id="nmerr"></span>
+</div>
+<div class="nmprivacy" id="nmprivacy">
+ <b>Quello che scrivi resta su questo dispositivo.</b> La pagina non invia niente in rete e non
+ salva niente: nessun dato esce da qui. Per la stessa ragione, <b>chiudendola il contenuto si
+ perde</b> — copia il referto dove ti serve prima di chiudere.
+</div>
+
+
+
+
+
+
+<div class="page">
+
+<div class="bar" id="bar" aria-live="polite">
+  <span class="lbl">Probabilità</span> <span id="barProb" class="cat kx">—</span>
+  <span class="lbl">Esito</span> <span id="barEsito" class="cat kx">—</span>
+  <span class="sp"></span>
+  <button class="btn" id="azzera" type="button">Azzera</button>
+</div>
+
+<div class="kicker">Strumento · Embolia polmonare · AHA/ACC 2026, con ESC 2019 dove decide diversamente</div>
+<h1 class="headline">Sospetta EP: imaging, D-dimero o nessun test</h1>
+<p class="oneline"><strong>Come si usa.</strong> Il passo 1 porta la <strong>probabilità clinica</strong> nelle tre fasce della Fig. 1 AHA/ACC (&lt;15%, 15–50%, &gt;50%), con la regola di Wells o con una stima diretta. Con probabilità bassa lo strumento legge il <strong>PERC</strong>; se non basta, o con probabilità intermedia, serve il <strong>D-dimero</strong> (passo 3) con la sua soglia: criteri <strong>YEARS</strong> o soglia <strong>età-corretta</strong>. In gravidanza vale lo YEARS adattato (passo 4). Ne esce il ramo della figura con la sua classe, e che cosa fare dopo. <strong>Azzera</strong>, in alto, ricomincia. Nessuna dose: se l'EP è confermata il passo dopo è il <strong>Tool EP</strong> (categoria e piano).</p>
+<div class="meta-row">
+  <span class="meta-chip"><strong>Fonte</strong> 2026 AHA/ACC Guideline for the Evaluation and Management of Acute Pulmonary Embolism in Adults · 2019 ESC Guidelines on acute pulmonary embolism</span>
+  <span class="meta-chip"><strong>Calcolo</strong> AHA Fig. 1 p. e984 · Tab. 3 p. e985 · raccomandazioni pp. e983, e986 · ESC pp. 555, 559–560, 571, 580, 582 · Suppl. Tab. 1</span>
+</div>
+
+<div class="stage"><span class="stage-n">1</span><span class="stage-t">Paziente e probabilità clinica</span><span class="stage-w">Fig. 1 p. e984 · Tab. 3 p. e985</span></div>
+<div class="card">
+  <div class="row">
+    <span class="fl">Età<small>anni · PERC e soglia età-corretta</small></span>
+    <input type="number" id="eta" min="18" max="120" step="1" inputmode="numeric" placeholder="—">
+  </div>
+  <div class="row">
+    <span class="fl">Frequenza cardiaca<small>/min · Wells e PERC</small></span>
+    <input type="number" id="fc" min="20" max="300" step="1" inputmode="numeric" placeholder="—">
+  </div>
+  <div class="row">
+    <span class="fl">SpO₂<small>% · PERC</small></span>
+    <input type="number" id="spo2" min="50" max="100" step="1" inputmode="numeric" placeholder="—">
+  </div>
+  <label class="chk"><input type="checkbox" id="grav"><span>Gravidanza<small>vale lo YEARS adattato alla gravidanza (Fig. 1, nota †)</small></span></label>
+  <label class="chk"><input type="checkbox" id="ac"><span>Anticoagulazione terapeutica in corso, o nelle 24 ore precedenti<small>le soglie del D-dimero sono state studiate senza (pp. e984, e985)</small></span></label>
+
+  <div class="sublbl">Voci cliniche — una volta sola, le usano le regole indicate</div>
+  <div class="due">
+    <label class="chk"><input type="checkbox" id="tvp"><span>Segni clinici di TVP <span class="tag">Wells 3</span><span class="tag">YEARS</span><small>gonfiore dell'arto, dolore alla palpazione</small></span></label>
+    <label class="chk"><input type="checkbox" id="piuProb"><span>EP più probabile delle altre diagnosi <span class="tag">Wells 3</span><span class="tag">YEARS</span><small>per YEARS: l'EP è la diagnosi più probabile</small></span></label>
+    <label class="chk"><input type="checkbox" id="emott"><span>Emottisi <span class="tag">Wells 1</span><span class="tag">YEARS</span><span class="tag">PERC</span></span></label>
+    <label class="chk"><input type="checkbox" id="prec"><span>TVP o EP pregressa <span class="tag">Wells 1,5</span><span class="tag">PERC</span></span></label>
+    <label class="chk"><input type="checkbox" id="immob"><span>Immobilizzazione ≥3 giorni o chirurgia nelle 4 settimane precedenti <span class="tag">Wells 1,5</span></span></label>
+    <label class="chk"><input type="checkbox" id="neo"><span>Neoplasia <span class="tag">Wells 1</span></span></label>
+    <label class="chk"><input type="checkbox" id="estro"><span>Uso di estrogeni <span class="tag">PERC</span></span></label>
+    <label class="chk"><input type="checkbox" id="gonf"><span>Gonfiore unilaterale di una gamba <span class="tag">PERC</span></span></label>
+    <label class="chk"><input type="checkbox" id="chir"><span>Chirurgia o trauma con ricovero nelle 4 settimane precedenti <span class="tag">PERC</span></span></label>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <span class="fl">Come si stima la probabilità<small>strumento validato: Wells, Ginevra rivista o gestalt (Fig. 1, nota *)</small></span>
+    <span class="seg">
+      <label><input type="radio" name="metodo" value="wells"><span>regola di Wells</span></label>
+      <label><input type="radio" name="metodo" value="diretta"><span>stima diretta</span></label>
+    </span>
+  </div>
+  <div class="row" id="rigaStima">
+    <span class="fl">Fascia stimata<small>gestalt o altra regola validata</small></span>
+    <span class="seg">
+      <label><input type="radio" name="stima" value="bassa"><span>&lt;15% bassa</span></label>
+      <label><input type="radio" name="stima" value="intermedia"><span>15–50% intermedia</span></label>
+      <label><input type="radio" name="stima" value="alta"><span>&gt;50% alta</span></label>
+    </span>
+  </div>
+</div>
+
+<div class="stage"><span class="stage-n">2</span><span class="stage-t">PERC, con probabilità bassa</span><span class="stage-w">Tab. 3 p. e985</span></div>
+<div class="card" id="outPerc"></div>
+
+<div class="stage"><span class="stage-n">3</span><span class="stage-t">D-dimero e sua soglia</span><span class="stage-w">e983 n. 2–4 · Fig. 1 nota †</span></div>
+<div class="card">
+  <div class="row">
+    <span class="fl">D-dimero<small>valore del referto</small></span>
+    <input type="number" id="dd" min="50" max="100000" step="1" inputmode="decimal" placeholder="—">
+  </div>
+  <div class="row">
+    <span class="fl">Unità del referto<small>le soglie della fonte sono in FEU: 1 μg/L = 1 ng/mL</small></span>
+    <span class="seg">
+      <label><input type="radio" name="unita" value="ug"><span>μg/L FEU</span></label>
+      <label><input type="radio" name="unita" value="ng"><span>ng/mL FEU</span></label>
+      <label><input type="radio" name="unita" value="altra"><span>altra (mg/L, μg/mL, DDU)</span></label>
+    </span>
+  </div>
+  <div class="row" id="rigaStrat">
+    <span class="fl">Strategia<small>la Fig. 1 le ammette tutte e tre</small></span>
+    <span class="seg">
+      <label><input type="radio" name="strat" value="years"><span>YEARS</span></label>
+      <label><input type="radio" name="strat" value="yearsEta"><span>YEARS con soglia età-corretta</span></label>
+      <label><input type="radio" name="strat" value="eta"><span>solo età-corretta</span></label>
+    </span>
+  </div>
+  <p class="muted hide" id="rigaStratGrav" style="font-size:13px">In gravidanza la strategia è una sola: lo YEARS adattato alla gravidanza (Fig. 1, nota †).</p>
+</div>
+
+<div class="stage" id="stageGrav"><span class="stage-n">4</span><span class="stage-t">Gravidanza</span><span class="stage-w">e983 n. 4 · e986 n. 4 e testo</span></div>
+<div class="card" id="cardGrav">
+  <div class="row" id="rigaCus">
+    <span class="fl">Compressione venosa (CUS)<small>nella gestante con segni all'arto inferiore</small></span>
+    <span class="seg">
+      <label><input type="radio" name="cus" value="pos"><span>positiva</span></label>
+      <label><input type="radio" name="cus" value="neg"><span>negativa</span></label>
+      <label><input type="radio" name="cus" value="no"><span>non eseguita</span></label>
+    </span>
+  </div>
+  <div class="row">
+    <span class="fl">Radiografia del torace<small>decide la modalità dell'imaging (e986 n. 4)</small></span>
+    <span class="seg">
+      <label><input type="radio" name="rx" value="norm"><span>normale</span></label>
+      <label><input type="radio" name="rx" value="anorm"><span>anormale</span></label>
+      <label><input type="radio" name="rx" value="no"><span>non eseguita</span></label>
+    </span>
+  </div>
+  <p class="muted" id="gravSenzaTvp" style="font-size:13px">La compressione venosa compare quando sono segnati i segni clinici di TVP.</p>
+</div>
+
+<div class="stage"><span class="stage-n">→</span><span class="stage-t">Che cosa fare</span><span class="stage-w">AHA/ACC 2026 · ESC 2019 accanto</span></div>
+<div class="card" id="outRamo"></div>
+<div class="card" id="outProb"></div>
+<div class="card" id="outDd"></div>
+<div class="card" id="outGrav"></div>
+<div class="card" id="outDopo"></div>
+<div class="card"><h3><span class="lg lg-esc">ESC 2019</span>Dove decide diversamente, nella sua scala</h3><div id="outEsc"></div></div>
+<div class="card"><h3>Limiti per questo paziente</h3><ul class="lista" id="limiti"></ul></div>
+
+<div class="foot">
+  <strong>Fonti.</strong> 2026 AHA/ACC/ACCP/ACEP/CHEST/SCAI/SHM/SIR/SVM/SVN Guideline for the Evaluation and Management of Acute Pulmonary Embolism in Adults. <em>Circulation</em> 2026;153:e977–e1051 (doi 10.1161/CIR.0000000000001415) — valutazione clinica e test diagnostici (§ 3.1.1–3.1.2, pp. e983–e988), Fig. 1 (p. e984) e sue note, Tab. 3 (p. e985), anticoagulazione in attesa dell'imaging (p. e1002, n. 4). 2019 ESC Guidelines for the diagnosis and management of acute pulmonary embolism. <em>Eur Heart J</em> 2020;41:543–603 (doi 10.1093/eurheartj/ehz405) — PERC e D-dimero (pp. 555), raccomandazioni 4.11 (pp. 559–560), Fig. 4 e 5 (pp. 570–571), gravidanza (Fig. 7 p. 580, raccomandazioni 9.5 p. 582); Suppl. Tab. 1 (p. 3, regola di Wells). Le pagine sono quelle stampate. Ogni esito porta la sua.<br><br>
+  Strumento personale di studio e consultazione: <strong>non sostituisce il giudizio clinico</strong>. Non calcola dosi e non classifica la gravità: se l'EP è confermata, categoria, destinazione e piano sono nel Tool EP. Non salva i dati e non li invia in rete.
+</div>
+
+</div>
+<script>
+(function () {
+  "use strict";
+
+  /* ═══ DATI ═══════════════════════════════════════════════════════════════
+     AHA/ACC 2026 (pagine stampate, e977–e1051) e ESC 2019 (543–603).
+
+     Fig. 1, p. e984 — letta sull'immagine, connettore per connettore:
+       sintomi sospetti → anamnesi ed esame obiettivo (COR 1)
+       → probabilita' quantificata con uno strumento validato (nota *: Wells,
+         Ginevra rivista o gestalt) → tre rami:
+         <15% (bassa)  → PERC, tutti i criteri soddisfatti?
+                          SI' → probabilita' molto bassa, nessun altro test
+                          NO  → riquadro del D-dimero
+         15–50% (intermedia) → D-dimero e criteri YEARS (COR 2a, nota †)
+         >50% (alta)   → imaging diagnostico (COR 1)
+       sotto il D-dimero, quattro uscite:
+         0 criteri YEARS e D-dimero <1000 ng/mL            → EP esclusa
+         >=1 criterio e D-dimero <500 ng/mL o soglia eta'-corretta → EP esclusa
+         0 criteri YEARS e D-dimero >=1000 ng/mL           → imaging
+         >=1 criterio e D-dimero >=500 ng/mL o soglia eta'-corretta → imaging
+       nota †: criteri YEARS = segni clinici di TVP, emottisi, EP diagnosi piu'
+         probabile; l'eta'-corretto e' un'alternativa ai criteri YEARS; in
+         gravidanza si usano i criteri YEARS adattati.
+     Raccomandazioni (griglia raccomandazioni.json, verificate sulla pagina):
+       e983 n. 1  anamnesi ed esame obiettivo per la probabilita' ........ 1 A
+       e983 n. 2  <50%: D-dimero eta'-corretto (eta' x 10 μg/L, FEU) ..... 2a B-R
+       e983 n. 3  algoritmo YEARS (nota *: 500 con >=1 criterio, 1000 senza) 2a B-R
+       e983 n. 4  gravidanza: YEARS adattato ............................ 2b B-NR
+       e986 n. 1  imaging con probabilita' >50% o D-dimero elevato ....... 1 A
+       e986 n. 2  angio-TC positiva o V/Q ad alta probabilita': diagnosi .. 1 A
+       e986 n. 3  angio-TC preferita alla V/Q per confermare ............ 1 B-R
+       e986 n. 4  gestante, YEARS verso l'imaging, RX normale: angio-TC a
+                  bassa dose preferita alla scintigrafia perfusoria ...... 2a B-NR
+       e986 n. 9  eco per confermare o escludere l'EP ................... 3: No Benefit B-NR
+       e1002 n. 4 sospetta EP in categoria >=C2, rischio emorragico basso,
+                  imaging ritardato: anticoagulazione terapeutica ....... 2a C-EO
+     Testo senza classe: e983 (tre condizioni: D-dimero sotto soglia,
+       probabilita' <50%, nessuna anticoagulazione al basale; alta prevalenza),
+       e984 (eta'-corretto per chi ha >50 anni; soglia standard <500; studi con
+       dosaggi FEU, esclusi gli anticoagulati nelle 24 ore), e985 (YEARS studiato
+       solo senza anticoagulazione terapeutica), e986 (gestante con sintomi
+       all'arto e CUS positiva: anticoagulare, angio-TC non necessariamente).
+     Tab. 3, p. e985 — Wells: segni di TVP 3, EP piu' probabile 3, FC >100 1,5,
+       immobilizzazione >=3 giorni o chirurgia nelle 4 settimane 1,5, TVP o EP
+       pregressa 1,5, emottisi 1, neoplasia 1; bassa <2, moderata 2–6, alta >6;
+       modificato: probabile >4, improbabile <=4.
+       PERC (da valutare se la probabilita' e' <15%, es. Wells <2): eta' <50,
+       FC <100, SpO2 >=95%, nessuna emottisi, nessun estrogeno, nessuna TVP o EP
+       pregressa, nessun gonfiore unilaterale della gamba, nessuna chirurgia o
+       trauma con ricovero nelle 4 settimane; tutti soddisfatti: nessun altro test.
+     ESC 2019 (solo dove decide diversamente): p. 559 D-dimero I A (alta
+       sensibilita'), eta'-corretto IIa B (>50 anni), adattato alla probabilita'
+       IIa B (nota c p. 560: 1000 / 500 μg/L, senza correzione per eta'),
+       D-dimero con probabilita' alta III A, anticoagulare in attesa con
+       probabilita' alta o intermedia I C, instabilita': eco al letto o angio-TC
+       I C; p. 560 TVP prossimale alla CUS = diagnosi I A; p. 555 PERC nel
+       testo, senza classe; Fig. 5 p. 571 (EP probabile → angio-TC; nota b:
+       dosaggio poco sensibile solo con probabilita' bassa); Fig. 7 p. 580 e 9.5
+       p. 582 (gravidanza); Suppl. Tab. 1 p. 3 (Wells: bassa 0–1, intermedia
+       2–6, alta >=7; improbabile 0–4, probabile >=5). */
+  var WELLS = [  // AHA/ACC 2026, Tab. 3, p. e985
+    { id:"tvp",     p:3,   t:"segni clinici di TVP" },
+    { id:"piuProb", p:3,   t:"EP più probabile delle altre diagnosi" },
+    { id:"fc",      p:1.5, t:"FC &gt;100/min" },
+    { id:"immob",   p:1.5, t:"immobilizzazione o chirurgia" },
+    { id:"prec",    p:1.5, t:"TVP o EP pregressa" },
+    { id:"emott",   p:1,   t:"emottisi" },
+    { id:"neo",     p:1,   t:"neoplasia" }
+  ];
+  var SOGLIA = {
+    wellsBassa: 2,    // Tab. 3: bassa <2
+    wellsAlta:  6,    // Tab. 3: alta >6
+    wellsDue:   4,    // Tab. 3: modificato, probabile >4
+    wellsFc:    100,  // Tab. 3: FC >100
+    percEta:    50,   // Tab. 3, PERC: eta' <50
+    percFc:     100,  // Tab. 3, PERC: FC <100
+    percSpo2:   95,   // Tab. 3, PERC: SpO2 >=95%
+    years0:     1000, // e983 nota *; Fig. 1: 0 criteri, <1000
+    years1:     500,  // e983 nota *; Fig. 1: >=1 criterio, <500
+    std:        500,  // e984: soglia standard <500 μg/L
+    etaDa:      50,   // e984: eta'-corretto per chi ha >50 anni (ESC p. 559: >50)
+    etaK:       10    // e983 n. 2: eta' x 10 μg/L
+  };
+  var YEARS = ["tvp", "emott", "piuProb"];  // e983 nota *; Fig. 1 nota †
+  var NOMIY = { tvp:"segni clinici di TVP", emott:"emottisi", piuProb:"EP diagnosi più probabile" };
+  var AHA = {  // [classe, livello, dove] — griglia AHA, sistema AHA
+    hp:       ["1",  "A",    "p. e983, n. 1"],
+    eta:      ["2a", "B-R",  "p. e983, n. 2"],
+    years:    ["2a", "B-R",  "p. e983, n. 3"],
+    grav:     ["2b", "B-NR", "p. e983, n. 4"],
+    imaging:  ["1",  "A",    "p. e986, n. 1"],
+    diagnosi: ["1",  "A",    "p. e986, n. 2"],
+    angioTc:  ["1",  "B-R",  "p. e986, n. 3"],
+    gravTc:   ["2a", "B-NR", "p. e986, n. 4"],
+    spect:    ["2a", "B-R",  "p. e986, n. 5"],
+    vqMra:    ["2a", "B-R",  "p. e986, n. 6"],
+    eco:      ["3: No Benefit", "B-NR", "p. e986, n. 9"],
+    acAttesa: ["2a", "C-EO", "p. e1002, n. 4"]
+  };
+  var ESC = {  // [classe, livello, dove] — griglia ESC, sistema ESC
+    dd:       ["I",   "A", "p. 559"],
+    ddEta:    ["IIa", "B", "p. 559"],
+    ddYears:  ["IIa", "B", "p. 559"],
+    ddAlta:   ["III", "A", "p. 559"],
+    acAttesa: ["I",   "C", "p. 559"],
+    instab:   ["I",   "C", "p. 559"],
+    cus:      ["I",   "A", "p. 560"],
+    gravDd:   ["IIa", "B", "p. 582"],
+    gravCus:  ["IIa", "B", "p. 582"],
+    gravImg:  ["IIa", "C", "p. 582"]
+  };
+  // limiti di plausibilita' dello strumento, non della fonte (l'eta' minima si':
+  // le raccomandazioni n. 2 e 3 di p. e983 parlano di adulti)
+  var DOM = { eta:[18, 120], fc:[20, 300], spo2:[50, 100], dd:[50, 100000] };
+  var NOMI_DOM = { eta:"età (atteso 18–120 anni: lo strumento è per l'adulto)", fc:"frequenza cardiaca (attesa 20–300/min)",
+                   spo2:"SpO₂ (attesa 50–100%)", dd:"D-dimero (atteso 50–100000 μg/L FEU: sotto 50 il referto è probabilmente in mg/L o μg/mL)" };
+  var FASCIA = { bassa:"<15% · bassa", intermedia:"15–50% · intermedia", alta:">50% · alta" };
+  var STRAT = {
+    years:    { nome:"YEARS", cls:AHA.years, pg:"AHA/ACC 2026, p. e983, n. 3 e nota *; Fig. 1, p. e984" },
+    yearsEta: { nome:"YEARS con soglia età-corretta", cls:AHA.years, pg:"AHA/ACC 2026, Fig. 1, p. e984, riquadri con ≥1 criterio; p. e983, n. 2–3" },
+    eta:      { nome:"solo età-corretta", cls:AHA.eta, pg:"AHA/ACC 2026, p. e983, n. 2; p. e984; Fig. 1 nota †" },
+    grav:     { nome:"YEARS adattato alla gravidanza", cls:AHA.grav, pg:"AHA/ACC 2026, p. e983, n. 4; p. e986; Fig. 1 nota †" }
+  };
+
+  /* ═══ FUNZIONI PURE ═══════════════════════════════════════════════════ */
+  function nf(v) { return String(Math.round(v * 10) / 10).replace(".", ","); }
+
+  function pulisci(s0) {
+    var c = {}, k;
+    for (k in s0) if (s0.hasOwnProperty(k)) c[k] = s0[k];
+    c.fuoriDom = [];
+    for (k in DOM) if (DOM.hasOwnProperty(k) && c[k] !== null && c[k] !== undefined && (c[k] < DOM[k][0] || c[k] > DOM[k][1])) { c.fuoriDom.push(k); c[k] = null; }
+    if (c.metodo !== "diretta") c.stima = "";
+    if (!c.grav) { c.cus = ""; c.rx = ""; }
+    if (c.grav) c.strat = "";
+    if (!c.tvp) c.cus = "";
+    return c;
+  }
+
+  function fascia(w) { return w < SOGLIA.wellsBassa ? "bassa" : (w <= SOGLIA.wellsAlta ? "intermedia" : "alta"); }
+
+  function prob(s) {
+    var o = { metodo:s.metodo };
+    if (!s.metodo) { o.perche = "scegliere come si stima la probabilità clinica: regola di Wells o stima diretta"; return o; }
+    if (s.metodo === "diretta") {
+      if (!s.stima) { o.perche = "indicare la fascia di probabilità stimata"; return o; }
+      o.cat = s.stima; return o;
+    }
+    var base = 0, voci = [], i;
+    for (i = 0; i < WELLS.length; i++) {
+      if (WELLS[i].id !== "fc" && s[WELLS[i].id]) { base += WELLS[i].p; voci.push(WELLS[i].t + " " + nf(WELLS[i].p)); }
+    }
+    o.voci = voci;
+    if (s.fc === null) {
+      var a = fascia(base), b = fascia(base + 1.5);
+      o.wMin = base; o.wMax = base + 1.5;
+      if (a === b) { o.cat = a; o.fcIgnota = true; }
+      else o.perche = "serve la frequenza cardiaca: senza, il punteggio di Wells è " + nf(base) + " o " + nf(base + 1.5) + " e la fascia cambia (" + a + " o " + b + ")";
+      return o;
+    }
+    if (s.fc > SOGLIA.wellsFc) { base += 1.5; voci.push("FC &gt;100/min 1,5"); }
+    o.w = base; o.cat = fascia(base);
+    o.due = base > SOGLIA.wellsDue ? "probabile" : "improbabile";
+    return o;
+  }
+
+  function perc(s) {
+    var c = [
+      { t:"età &lt;50 anni", v:s.eta === null ? null : s.eta < SOGLIA.percEta, manca:"l'età" },
+      { t:"FC &lt;100/min", v:s.fc === null ? null : s.fc < SOGLIA.percFc, manca:"la frequenza cardiaca" },
+      { t:"SpO₂ ≥95%", v:s.spo2 === null ? null : s.spo2 >= SOGLIA.percSpo2, manca:"la SpO₂" },
+      { t:"nessuna emottisi", v:!s.emott },
+      { t:"nessun uso di estrogeni", v:!s.estro },
+      { t:"nessuna TVP o EP pregressa", v:!s.prec },
+      { t:"nessun gonfiore unilaterale di una gamba", v:!s.gonf },
+      { t:"nessuna chirurgia o trauma con ricovero nelle 4 settimane precedenti", v:!s.chir }
+    ];
+    var no = [], ign = [], i;
+    for (i = 0; i < c.length; i++) {
+      if (c[i].v === false) no.push(c[i].t);
+      else if (c[i].v === null) ign.push(c[i].manca);
+    }
+    return { crit:c, no:no, ign:ign, esito:no.length ? "no" : (ign.length ? null : "si") };
+  }
+
+  function contaYears(s) {
+    var l = [];
+    for (var i = 0; i < YEARS.length; i++) if (s[YEARS[i]]) l.push(NOMIY[YEARS[i]]);
+    return l;
+  }
+  function sogliaEta(eta) { return eta === null ? null : (eta > SOGLIA.etaDa ? eta * SOGLIA.etaK : SOGLIA.std); }
+  function soglie(s, ny) {
+    var ea = sogliaEta(s.eta);
+    return {
+      years:    ny === 0 ? SOGLIA.years0 : SOGLIA.years1,
+      yearsEta: ny === 0 ? SOGLIA.years0 : ea,
+      eta:      ea,
+      grav:     ny === 0 ? SOGLIA.years0 : SOGLIA.years1
+    };
+  }
+
+  // il ramo della Fig. 1
+  function ramo(s) {
+    var r = { via:[], note:[], p:prob(s) }, p = r.p;
+    r.yl = contaYears(s); r.ny = r.yl.length;
+    r.sog = soglie(s, r.ny);
+    r.st = s.grav ? "grav" : s.strat;
+    if (!p.cat) { r.k = "nd"; r.perche = p.perche; return r; }
+    r.via.push("probabilità " + FASCIA[p.cat].replace("<", "&lt;").replace(">", "&gt;"));
+    r.cusPos = !!(s.grav && s.tvp && s.cus === "pos");
+    if (p.cat === "alta") {
+      r.k = "img"; r.cls = AHA.imaging; r.motivo = "alta";
+      r.via.push("imaging diretto");
+      return r;
+    }
+    if (r.cusPos) {
+      r.k = "cus"; r.cls = AHA.grav;
+      r.via.push("gravidanza, segni all'arto → CUS positiva");
+      return r;
+    }
+    if (p.cat === "bassa" && s.grav) {
+      // lettura nostra, la piu' prudente: la fonte non colloca il PERC in
+      // gravidanza, e per la gestante raccomanda lo YEARS adattato (e983 n. 4),
+      // che passa sempre dal D-dimero; l'algoritmo ESC della gravidanza (Fig. 7
+      // p. 580; 9.5 p. 582) non usa il PERC
+      r.percGrav = true;
+      r.via.push("gravidanza: PERC non applicato");
+    } else if (p.cat === "bassa") {
+      r.perc = perc(s);
+      if (r.perc.esito === null) { r.k = "nd"; r.perche = "per il PERC servono " + r.perc.ign.join(", "); return r; }
+      if (r.perc.esito === "si") { r.k = "stop"; r.via.push("PERC: tutti e otto i criteri"); return r; }
+      r.via.push("PERC non soddisfatto");
+    }
+    r.inDd = true;
+    r.via.push("D-dimero e criteri YEARS: " + r.ny);
+    if (s.dd === null) { r.k = "dd"; r.cls = s.grav ? AHA.grav : AHA.years; return r; }
+    if (!s.unita) { r.k = "nd"; r.perche = "indicare l'unità in cui il referto dà il D-dimero"; return r; }
+    if (s.unita === "altra") {
+      r.k = "nd"; r.altraUnita = true;
+      r.perche = "le soglie della fonte sono in μg/L (= ng/mL) FEU e lo strumento non converte altre unità: riportare il valore in FEU dal referto, o chiederlo al laboratorio";
+      return r;
+    }
+    r.ver = {};
+    var chiavi = s.grav ? ["grav"] : ["years", "yearsEta", "eta"], i, v;
+    for (i = 0; i < chiavi.length; i++) r.ver[chiavi[i]] = r.sog[chiavi[i]] === null ? null : (s.dd < r.sog[chiavi[i]] ? "escl" : "img");
+    if (r.st) {
+      v = r.ver[r.st];
+      if (v === null) { r.k = "nd"; r.perche = "serve l'età: la soglia età-corretta è età × 10 μg/L sopra i 50 anni"; return r; }
+    } else {
+      if (r.ver.yearsEta === null || r.ver.eta === null) { r.k = "nd"; r.perche = "scegliere la strategia del D-dimero, o inserire l'età per confrontarle"; return r; }
+      if (r.ver.years === r.ver.yearsEta && r.ver.yearsEta === r.ver.eta) { v = r.ver.years; r.concordi = true; }
+      else { r.k = "nd"; r.discordi = true; r.perche = "per questo valore le tre strategie non danno lo stesso esito: sceglierne una al passo 3"; return r; }
+    }
+    r.via.push(nf(s.dd) + " μg/L " + (v === "escl" ? "sotto" : "uguale o sopra") + " la soglia");
+    if (v === "escl" && s.ac) { r.k = "nonEscl"; return r; }
+    r.k = v;
+    if (v === "img") { r.cls = AHA.imaging; r.motivo = "dd"; }
+    else r.cls = r.concordi ? AHA.years : STRAT[r.st].cls;
+    return r;
+  }
+
+  /* ═══ STATO E DISEGNO ═════════════════════════════════════════════════ */
+  function el(id) { return document.getElementById(id); }
+  function ck(id) { var e = el(id); return !!(e && e.checked); }
+  function num(id) {
+    var e = el(id); if (!e) return null;
+    var v = String(e.value).replace(",", ".").trim();
+    if (v === "") return null;
+    var n = parseFloat(v);
+    return isFinite(n) ? n : null;
+  }
+  function radio(n) { var e = document.querySelector('input[name="' + n + '"]:checked'); return e ? e.value : ""; }
+
+  function S() {
+    return {
+      eta:num("eta"), fc:num("fc"), spo2:num("spo2"), dd:num("dd"),
+      grav:ck("grav"), ac:ck("ac"),
+      tvp:ck("tvp"), piuProb:ck("piuProb"), emott:ck("emott"), prec:ck("prec"), immob:ck("immob"), neo:ck("neo"),
+      estro:ck("estro"), gonf:ck("gonf"), chir:ck("chir"),
+      metodo:radio("metodo"), stima:radio("stima"), unita:radio("unita"), strat:radio("strat"),
+      cus:radio("cus"), rx:radio("rx")
+    };
+  }
+
+  function pgs(p) { return ' <span class="pg">' + p + "</span>"; }
+  var KA = { "1":"cor-1", "2a":"cor-2a", "2b":"cor-2b", "3: No Benefit":"cor-3nb", "3: Harm":"cor-3h" };
+  var KE = { "I":"cor-1", "IIa":"cor-2a", "IIb":"cor-2b", "III":"cor-3h" };
+  function pA(r) { return '<span class="cor ' + KA[r[0]] + '">' + r[0] + '</span> <span class="loe">' + r[1] + "</span>" + pgs("AHA/ACC 2026, " + r[2]); }
+  function pA0(r) { return '<span class="cor ' + KA[r[0]] + '">' + r[0] + '</span> <span class="loe">' + r[1] + "</span>"; }
+  function pE(r) { return '<span class="cor esc ' + KE[r[0]] + '">' + r[0] + '</span> <span class="loe">' + r[1] + "</span>" + pgs("ESC 2019, " + r[2]); }
+  var SENZA = '<span class="cor cnc">senza classe</span>';
+  function nota(g, t) { return '<div class="nota ' + (g || "") + '">' + t + "</div>"; }
+  function chip(k, t) { return '<span class="cat ' + k + '">' + t + "</span>"; }
+  function riga(cls, ico, t) { return '<div class="riga ' + cls + '"><span class="ico">' + ico + '</span><span class="tx">' + t + "</span></div>"; }
+  function mu(t) { return t.replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  var ESITO = {
+    nd:      ["kx", "—"],
+    stop:    ["k0", "nessun altro test"],
+    dd:      ["k1", "D-dimero"],
+    escl:    ["k0", "EP esclusa"],
+    img:     ["k4", "imaging"],
+    cus:     ["k4", "TVP: anticoagulare"],
+    nonEscl: ["k2", "non esclusa dal D-dimero"]
+  };
+  var KPROB = { bassa:"k0", intermedia:"k2", alta:"k4" };
+
+  function disegna() {
+    var s = pulisci(S()), r = ramo(s), p = r.p, h, i;
+
+    // campi che valgono solo in certi rami
+    el("rigaStima").className = "row" + (s.metodo === "diretta" ? "" : " hide");
+    el("rigaStrat").className = "row" + (s.grav ? " hide" : "");
+    el("rigaStratGrav").className = "muted" + (s.grav ? "" : " hide");
+    el("stageGrav").className = "stage" + (s.grav ? "" : " hide");
+    el("cardGrav").className = "card" + (s.grav ? "" : " hide");
+    el("rigaCus").className = "row" + (s.grav && s.tvp ? "" : " hide");
+    el("gravSenzaTvp").className = "muted" + (s.grav && !s.tvp ? "" : " hide");
+
+    var dom = "";
+    if (s.fuoriDom.length) {
+      var fd = [];
+      for (i = 0; i < s.fuoriDom.length; i++) fd.push(NOMI_DOM[s.fuoriDom[i]]);
+      dom = nota("stop", "<b>Valore fuori dominio, ignorato:</b> " + fd.join("; ") + ". Lo strumento lo tratta come non inserito.");
+    }
+
+    /* (a) il ramo della Fig. 1 */
+    h = "<h3>Il ramo della Fig. 1 — AHA/ACC 2026, p. e984</h3>" + dom;
+    if (r.via.length) h += '<div class="via">' + r.via.join(" → ") + "</div>";
+    var big = "", sotto = "";
+    if (r.k === "nd") {
+      h += '<div class="esito">' + chip("kx", "—") + '<span class="muted">' + r.perche + "</span></div>";
+    } else {
+      if (r.k === "stop") {
+        big = "Nessun altro test";
+        sotto = "Probabilità clinica molto bassa: il PERC chiude il sospetto senza D-dimero né imaging " + SENZA + pgs("AHA/ACC 2026, Fig. 1, p. e984; Tab. 3, p. e985");
+      } else if (r.k === "dd") {
+        big = "D-dimero, e criteri YEARS";
+        sotto = (s.grav ? "In gravidanza, con lo YEARS adattato " : "Dosare il D-dimero e contare i criteri YEARS — nella figura il riquadro è 2a ") + pA(s.grav ? AHA.grav : AHA.years) +
+                ". Inserire il valore al passo 3: la soglia sarà <b>" + (r.ny === 0 ? "1000 μg/L" : "500 μg/L" + (s.grav ? "" : " o quella età-corretta")) + "</b> con " + r.ny + " criteri YEARS.";
+      } else if (r.k === "escl") {
+        big = "EP esclusa — niente imaging";
+        sotto = "D-dimero sotto la soglia della strategia " + (r.concordi ? "(le tre strategie concordano) " + pA(AHA.years) + " · " + pA(AHA.eta) : "<b>" + STRAT[r.st].nome + "</b> " + pA(STRAT[r.st].cls));
+      } else if (r.k === "img") {
+        big = "Imaging diagnostico";
+        sotto = (r.motivo === "alta" ? "Probabilità alta: all'imaging senza D-dimero" : "D-dimero uguale o sopra la soglia" + (r.concordi ? " (le tre strategie concordano)" : r.st ? " (" + STRAT[r.st].nome + ")" : "")) + " — <b>raccomandato</b> " + pA(AHA.imaging) +
+                (r.motivo === "alta" ? "; nella figura il riquadro è colorato 1" : "; la raccomandazione nomina il D-dimero elevato, la figura lascia il riquadro senza colore");
+      } else if (r.k === "cus") {
+        big = "TVP alla compressione venosa: anticoagulare";
+        sotto = "Nella gestante con segni all'arto e CUS positiva l'angio-TC non è necessariamente richiesta" + pgs("AHA/ACC 2026, p. e986, testo") + " " + SENZA +
+                "; è un passo dello YEARS adattato alla gravidanza " + pA(AHA.grav) + ".";
+      } else if (r.k === "nonEscl") {
+        big = "Non esclusa dal D-dimero";
+        sotto = "Il valore è sotto la soglia, ma il paziente è in anticoagulazione terapeutica: l'esclusione vale solo senza" + pgs("AHA/ACC 2026, pp. e983, e984, e985") +
+                ". La Fig. 1 non ha un ramo per questo caso: la decisione sull'imaging resta clinica.";
+      }
+      var ke = ESITO[r.k];
+      h += '<div class="esito"><span class="big">' + big + "</span>" + chip(ke[0], ke[1]) + "</div>";
+      h += '<p style="font-size:14px">' + sotto + "</p>";
+    }
+    if (r.percGrav) h += nota("", "Probabilità bassa in gravidanza: il PERC non si applica (lettura nostra, la più prudente: la fonte non colloca il PERC in gravidanza, e per la gestante raccomanda lo YEARS adattato)" + pgs("AHA/ACC 2026, p. e983, n. 4; Fig. 1 nota †") + ".");
+    if (r.k === "img" && r.motivo === "alta" && s.dd !== null) h += nota("", "È stato inserito un D-dimero (" + nf(s.dd) + "): con probabilità alta la Fig. 1 non passa dal D-dimero, e il valore <b>non cambia il ramo</b>" + pgs("AHA/ACC 2026, Fig. 1, p. e984") + ".");
+    if (r.k === "img" && r.cusPos) h += nota("", "Gestante con segni all'arto e CUS positiva: il testo di p. e986 dice che si può trattare senza angio-TC, ma non dice se valga anche con probabilità alta; la Fig. 1 manda all'imaging, e lo strumento mostra la figura" + pgs("AHA/ACC 2026, Fig. 1, p. e984; p. e986") + ".");
+    if (s.ac && (r.k === "nonEscl" || (r.k === "img" && r.motivo === "dd"))) h += nota("", "<b>Se il sospetto è una recidiva</b> in corso di anticoagulazione, il testo la tratta a parte: l'imaging documenta la recidiva, un D-dimero normale può sostenerne l'esclusione e uno elevato da solo non basta per la diagnosi" + pgs("AHA/ACC 2026, pp. e1024–e1025") + ". La recidiva è fuori da questo strumento.");
+    if (r.k === "img" && s.ac && r.motivo === "dd") h += nota("info", "Paziente in anticoagulazione: le soglie sono state studiate senza (pp. e984, e985); un D-dimero elevato porta comunque all'imaging secondo la raccomandazione" + pgs("AHA/ACC 2026, p. e986, n. 1") + ".");
+    el("outRamo").innerHTML = h;
+
+    /* (b) la probabilita' */
+    h = "<h3>Probabilità clinica — Fig. 1 p. e984 · Tab. 3 p. e985</h3>";
+    h += riga("si", "→", "Anamnesi mirata ed esame obiettivo completo per stimare la probabilità pretest — <b>raccomandati</b> " + pA(AHA.hp));
+    if (!p.cat) {
+      h += '<div class="esito">' + chip("kx", "—") + '<span class="muted">' + p.perche + "</span></div>";
+    } else {
+      h += '<div class="esito"><span class="big">' + mu(FASCIA[p.cat]) + "</span>" + chip(KPROB[p.cat], p.metodo === "wells" ? "Wells" : "stima diretta") + "</div>";
+    }
+    if (p.metodo === "wells") {
+      var pt = p.w !== undefined ? nf(p.w) : (p.wMin !== undefined ? nf(p.wMin) + " o " + nf(p.wMax) : "—");
+      h += riga("si", "=", "Wells <b>" + pt + "</b>" + (p.voci.length ? ": " + p.voci.join(" · ") : ": nessuna voce") + pgs("AHA/ACC 2026, Tab. 3, p. e985"));
+      h += riga("off", "·", "Soglie della Tab. 3: bassa &lt;2 · moderata 2–6 · alta &gt;6; a due livelli EP probabile &gt;4, improbabile ≤4" + (p.due ? " — qui <b>EP " + p.due + "</b>" : "") + pgs("AHA/ACC 2026, Tab. 3, p. e985"));
+      if (p.fcIgnota) h += nota("info", "Frequenza cardiaca non inserita: con o senza la voce FC &gt;100/min (1,5 punti) la fascia resta la stessa.");
+      h += nota("info", "La Tab. 3 lega il &lt;15% a Wells &lt;2 (riga del PERC); la moderata 2–6 e l'alta &gt;6 sono poste sulle fasce 15–50% e &gt;50% della figura: <b>lettura dello strumento</b>, la fonte non scrive l'equivalenza.");
+    } else if (p.metodo === "diretta") {
+      h += nota("info", "Stima diretta: gestalt clinico o un'altra regola validata, per esempio la Ginevra rivista della Tab. 3, che lo strumento non calcola" + pgs("AHA/ACC 2026, Fig. 1 nota *, p. e984; Tab. 3, p. e985") + ".");
+    }
+    el("outProb").innerHTML = h;
+
+    /* (c) PERC */
+    h = "<h3>PERC — AHA/ACC 2026, Tab. 3, p. e985 " + SENZA + "</h3>";
+    if (p.cat === "bassa" && s.grav) {
+      h += nota("stop", "<b>Gravidanza: il PERC non si applica.</b> È una <b>lettura nostra, la più prudente</b>: la fonte non colloca il PERC in gravidanza, e per la gestante raccomanda lo YEARS adattato " + pA(AHA.grav) + ", che passa sempre dal D-dimero. Nemmeno l'algoritmo ESC della gravidanza usa il PERC" + pgs("ESC 2019, Fig. 7, p. 580; 9.5, p. 582") + ". Con probabilità bassa si va quindi al <b>D-dimero con lo YEARS adattato</b>.");
+    } else if (p.cat === "bassa") {
+      var pc = r.perc || perc(s);
+      for (i = 0; i < pc.crit.length; i++) {
+        var cv = pc.crit[i].v;
+        h += riga(cv === true ? "si" : cv === false ? "no" : "nd", cv === true ? "✓" : cv === false ? "✗" : "?", pc.crit[i].t);
+      }
+      if (pc.esito === "si") h += nota("ok", "Tutti e otto i criteri: probabilità molto bassa, <b>nessun altro test</b>" + pgs("AHA/ACC 2026, Fig. 1, p. e984") + ".");
+      else if (pc.esito === "no") h += nota("", "PERC non soddisfatto (" + pc.no.join("; ") + "): si passa al <b>D-dimero</b> con i criteri YEARS" + pgs("AHA/ACC 2026, Fig. 1, p. e984") + ".");
+      else h += nota("", "Per decidere servono " + pc.ign.join(", ") + ".");
+    } else {
+      h += '<p class="muted" style="font-size:13px">' + (p.cat ? "Non si applica: il PERC si valuta solo con probabilità bassa, &lt;15% (Tab. 3; Fig. 1)." : "Si valuta solo con probabilità bassa, &lt;15%: prima la probabilità.") + "</p>";
+    }
+    el("outPerc").innerHTML = h;
+
+    /* (d) la soglia del D-dimero */
+    h = "<h3>Soglia del D-dimero — AHA/ACC 2026, p. e983 n. 2–4 · Fig. 1</h3>";
+    h += riga("si", "=", "Criteri YEARS presenti: <b>" + r.ny + "</b>" + (r.ny ? " (" + r.yl.join(", ") + ")" : "") + pgs("AHA/ACC 2026, p. e983 nota *; Fig. 1 nota †"));
+    var righe = s.grav ? ["grav"] : ["years", "yearsEta", "eta"];
+    for (i = 0; i < righe.length; i++) {
+      var k = righe[i], so = r.sog[k], ve = r.ver ? r.ver[k] : undefined;
+      var testo = "<b>" + STRAT[k].nome + "</b> " + pA0(STRAT[k].cls) + " — soglia ";
+      if (so === null) testo += "<b>—</b> (serve l'età)";
+      else testo += "<b>" + so + " μg/L</b>" + (k === "eta" || (k === "yearsEta" && r.ny) ? (s.eta > SOGLIA.etaDa ? " (" + s.eta + " × 10)" : " (fino a 50 anni resta 500)") : "");
+      if (ve === "escl") testo += " → sotto: <b>EP esclusa</b>";
+      else if (ve === "img") testo += " → uguale o sopra: <b>imaging</b>";
+      testo += pgs(STRAT[k].pg);
+      var sel = r.inDd && (r.st === k || (!r.st && r.concordi));
+      h += riga((sel ? "si sel" : (r.inDd ? "si" : "off")), sel ? "→" : "·", testo);
+    }
+    if (!r.inDd) h += '<p class="muted" style="font-size:13px">' + (p.cat === "alta" ? "Con probabilità alta la Fig. 1 va all'imaging senza D-dimero." : r.k === "stop" ? "Il PERC ha chiuso il sospetto: la figura non passa dal D-dimero." : r.k === "cus" ? "La CUS positiva ha deciso prima del D-dimero." : "Il D-dimero entra dopo la probabilità (e, se bassa, dopo il PERC).") + "</p>";
+    h += nota("info", "Unità: la Fig. 1 scrive ng/mL, la raccomandazione μg/L — <b>1 μg/L = 1 ng/mL</b>; gli studi usavano dosaggi in <b>FEU</b>" + pgs("AHA/ACC 2026, pp. e983, e984") + ". Lo strumento <b>non converte</b> altre unità (mg/L, μg/mL, DDU): verificare l'unità sul referto.");
+    if (!s.grav) h += nota("info", "La soglia età-corretta è età × 10 μg/L sopra i 50 anni; fino a 50 resta la soglia standard di 500" + pgs("AHA/ACC 2026, pp. e983, e984") + ". Con ≥1 criterio YEARS il riquadro della figura accetta 500 <b>o</b> la soglia età-corretta: sono due strategie, e fra 500 e la soglia età-corretta danno esiti diversi. Lo strumento non sceglie.");
+    if (r.discordi) h += nota("", "<b>Le strategie non concordano</b> per " + nf(s.dd) + " μg/L: sceglierne una al passo 3.");
+    el("outDd").innerHTML = h;
+
+    /* (e) gravidanza */
+    h = "";
+    if (s.grav) {
+      h = "<h3>Gravidanza — AHA/ACC 2026, pp. e983, e986</h3>";
+      h += riga("si", "→", "YEARS adattato alla gravidanza per decidere chi non ha bisogno dell'imaging — <b>può essere ragionevole</b> " + pA(AHA.grav) + "; soglie 1000 μg/L senza criteri, 500 con almeno uno" + pgs("AHA/ACC 2026, p. e983 nota *; p. e986"));
+      if (s.tvp) {
+        if (s.cus === "pos") h += riga("si", "→", "CUS positiva con segni all'arto: anticoagulare, l'angio-TC non è necessariamente richiesta" + pgs("AHA/ACC 2026, p. e986") + " " + SENZA);
+        else if (s.cus === "neg") h += nota("", "CUS negativa: la fonte non descrive questo ramo. Lo strumento prosegue con i criteri YEARS come sono definiti, dove i segni clinici di TVP restano un criterio" + pgs("AHA/ACC 2026, p. e983 nota *") + ".");
+        else if (s.cus === "no") h += nota("", "Con segni all'arto lo YEARS adattato passa dalla compressione venosa" + pgs("AHA/ACC 2026, p. e986") + ": non è stata eseguita.");
+        else h += nota("", "Indicare la compressione venosa: con segni all'arto e CUS positiva la gestante si tratta senza angio-TC" + pgs("AHA/ACC 2026, p. e986") + ".");
+      }
+      if (r.k === "img") {
+        if (s.rx === "norm") h += riga("si", "→", "RX torace normale: <b>angio-TC a bassa dose</b> preferita alla scintigrafia perfusoria a bassa dose — <b>ragionevole</b> " + pA(AHA.gravTc));
+        else if (s.rx === "anorm") h += nota("", "RX torace anormale: la raccomandazione AHA/ACC sulla modalità vale con RX normale" + pgs("AHA/ACC 2026, p. e986, n. 4") + ", e per questo caso la fonte non dà un ramo.");
+        else h += nota("", "La scelta fra angio-TC a bassa dose e scintigrafia perfusoria chiede la radiografia del torace: indicarla" + pgs("AHA/ACC 2026, p. e986, n. 4") + ".");
+      }
+      h += nota("info", "L'età-corretta non si usa in gravidanza: la nota † della Fig. 1 chiede lo YEARS adattato.");
+    }
+    el("outGrav").innerHTML = h;
+    el("outGrav").className = "card" + (s.grav ? "" : " hide");
+
+    /* (f) dopo */
+    h = "<h3>Dopo — p. e986, p. e1002</h3>";
+    if (r.k === "img") {
+      if (!s.grav) h += riga("si", "→", "Angio-TC preferita alla scintigrafia V/Q per confermare l'EP — <b>raccomandata</b> " + pA(AHA.angioTc));
+      if (!s.grav) h += riga("si", "→", "Se l'angio-TC non si può fare: V/Q preferita all'angio-RM " + pA(AHA.vqMra) + "; SPECT preferita alla V/Q planare " + pA(AHA.spect));
+      h += riga("si", "→", "Angio-TC positiva o V/Q ad alta probabilità <b>bastano</b> per la diagnosi " + pA(AHA.diagnosi));
+      h += riga("no", "✗", "L'ecocardiogramma non serve a confermare né a escludere l'EP " + pA(AHA.eco));
+      h += riga("nd", "?", "Se l'imaging è ritardato o non subito disponibile: anticoagulazione terapeutica <b>può essere utile</b> nella sospetta EP in categoria C2 o superiore con rischio emorragico basso " + pA(AHA.acAttesa) + " — la categoria la dà il Tool EP");
+    }
+    if (r.k === "img" || r.k === "cus") {
+      h += nota("ok", "<b>Se l'EP è confermata</b>, il passo dopo è il <b>Tool EP</b>: categoria AHA/ACC A–E (o classe ESC), destinazione e piano terapeutico con le dosi e il rene.");
+    } else if (r.k === "escl" || r.k === "stop") {
+      h += '<p class="muted" style="font-size:13px">La Fig. 1 si ferma qui: EP ' + (r.k === "stop" ? "non indagata oltre" : "esclusa") + ", nessun passo successivo nella figura.</p>";
+    } else {
+      h += '<p class="muted" style="font-size:13px">Il passo successivo dipende dall\'esito, che non c\'è ancora.</p>';
+    }
+    el("outDopo").innerHTML = h;
+
+    /* (g) ESC 2019, solo dove decide diversamente */
+    var E = [];
+    if (p.cat === "alta") E.push("Con probabilità alta il D-dimero <b>non va dosato</b>: un valore normale non esclude l'EP " + pE(ESC.ddAlta) + ". AHA/ACC 2026 va all'imaging senza una raccomandazione sul D-dimero.");
+    if (p.cat === "bassa") E.push("Il PERC <b>non è nell'algoritmo ESC</b>: con probabilità bassa si dosa il D-dimero" + pgs("ESC 2019, Fig. 5, p. 571") + ". Nel testo il PERC con probabilità bassa è risultato sicuro, ma la bassa prevalenza degli studi non ne sostiene la generalizzazione" + pgs("ESC 2019, p. 555") + " " + SENZA + ".");
+    if (p.metodo === "wells" && p.w !== undefined && p.cat === "intermedia" && p.w > SOGLIA.wellsDue)
+      E.push("Con Wells a due livelli, <b>EP probabile → angio-TC senza D-dimero</b>; con lo schema a tre livelli la probabilità intermedia va al D-dimero" + pgs("ESC 2019, Fig. 5, p. 571") + ". Qui Wells " + nf(p.w) + (p.w < 5 ? ": la Suppl. Tab. 1 scrive improbabile 0–4 e probabile ≥5, e il " + nf(p.w) + " cade fra le due righe (per AHA è probabile, &gt;4)" : ": EP probabile") + pgs("ESC 2019, Suppl. Tab. 1, p. 3") + ".");
+    if (p.metodo === "wells" && p.w !== undefined && p.w % 1 !== 0 && ((p.w > 1 && p.w < 2) || (p.w > 6 && p.w < 7)))
+      E.push("La Suppl. Tab. 1 ESC scrive bassa 0–1, intermedia 2–6, alta ≥7: un punteggio di " + nf(p.w) + " cade fra due righe. Lo strumento usa le soglie AHA (&lt;2, 2–6, &gt;6)" + pgs("ESC 2019, Suppl. Tab. 1, p. 3; AHA/ACC 2026, Tab. 3, p. e985") + ".");
+    if (r.inDd && p.cat === "intermedia") E.push("D-dimero raccomandato, preferibilmente con un dosaggio ad alta sensibilità " + pE(ESC.dd) + "; con probabilità intermedia un dosaggio solo moderatamente sensibile non basta" + pgs("ESC 2019, Fig. 5 nota b, p. 571") + ". AHA/ACC 2026 non distingue i dosaggi.");
+    if (r.inDd && !s.grav) {
+      E.push("YEARS («D-dimero adattato alla probabilità») " + pE(ESC.ddYears) + " con soglie <b>fisse</b>: 1000 μg/L senza criteri, 500 con almeno uno, <b>senza correzione per età</b>" + pgs("ESC 2019, nota c, p. 560") + ". La strategia «YEARS con soglia età-corretta» della Fig. 1 AHA non è nella ESC.");
+      E.push("Soglia età-corretta (età × 10 μg/L sopra i 50 anni) " + pE(ESC.ddEta) + ", alternativa alla soglia fissa di 500; AHA/ACC 2026 la dà 2a B-R. Stessa soglia, livello di evidenza diverso.");
+    }
+    if (p.cat === "alta" || p.cat === "intermedia") E.push("Iniziare l'anticoagulazione <b>senza attendere</b> la diagnosi con probabilità alta o intermedia " + pE(ESC.acAttesa) + ". AHA/ACC 2026 la lega alla categoria (C2 o superiore), al rischio emorragico basso e all'imaging ritardato, 2a C-EO (p. e1002, n. 4).");
+    if (r.k === "img" && !s.grav) E.push("Una <b>TVP prossimale alla compressione venosa</b> in un paziente con sospetta EP basta per la diagnosi di TEV, e di EP " + pE(ESC.cus) + ". La Fig. 1 AHA non ha la CUS, e nel testo la ricerca di routine della TVP non migliora la diagnosi" + pgs("AHA/ACC 2026, p. e988") + ".");
+    if (s.grav) {
+      E.push("Gravidanza: D-dimero e regole di predizione per escludere l'EP " + pE(ESC.gravDd) + "; compressione venosa, soprattutto con sintomi di TVP " + pE(ESC.gravCus) + ". Nella Fig. 7 la CUS viene <b>dopo</b> la probabilità alta o il D-dimero positivo, e una TVP prossimale porta a proseguire l'EBPM senza altro imaging, anche con probabilità alta" + pgs("ESC 2019, Fig. 7, p. 580") + ".");
+      E.push("Imaging in gravidanza: scintigrafia perfusoria <b>o</b> angio-TC a bassa dose, con l'angio-TC in prima linea se la RX torace è anormale " + pE(ESC.gravImg) + ". AHA/ACC 2026 preferisce l'angio-TC a bassa dose con RX normale (2a B-NR, p. e986 n. 4).");
+    }
+    h = "";
+    for (i = 0; i < E.length; i++) h += nota("esc", E[i]);
+    el("outEsc").innerHTML = h || '<p class="muted" style="font-size:13px">Nessuna differenza per questo caso' + (p.cat ? "" : " — prima la probabilità") + ".</p>";
+
+    /* (h) limiti */
+    var L = [];
+    L.push("<b>Unità.</b> Le soglie sono in μg/L FEU (= ng/mL FEU). Un referto in mg/L, μg/mL o in unità DDU non si converte qui: si verifica sul referto o col laboratorio.");
+    L.push("<b>Il PERC vale solo con probabilità bassa</b> (&lt;15%): fuori da quella fascia lo strumento non lo usa" + pgs("AHA/ACC 2026, Tab. 3, p. e985") + ".");
+    L.push("<b>Le due linee guida non usano le stesse regole</b>: AHA ha il PERC e lo YEARS con soglia età-corretta; ESC non ha il PERC nell'algoritmo, usa lo YEARS a soglie fisse e con Wells a due livelli manda l'EP probabile all'angio-TC. Lo strumento segue AHA/ACC 2026 e mostra ESC dove decide diversamente.");
+    if (s.ac) L.push("<b>Anticoagulazione in corso.</b> Gli studi delle soglie hanno escluso chi era in anticoagulazione terapeutica nelle 24 ore precedenti, e lo YEARS è stato studiato solo senza" + pgs("AHA/ACC 2026, pp. e984, e985") + ": un D-dimero sotto soglia non esclude l'EP.");
+    L.push("In contesti ad alta prevalenza, età-corretta e YEARS possono lasciar sfuggire delle EP; la soglia di sicurezza accettata è un fallimento del 2%" + pgs("AHA/ACC 2026, p. e983") + ".");
+    L.push("<b>Il paziente instabile</b> non ha un ramo nella Fig. 1. ESC 2019 ha un algoritmo proprio" + pgs("ESC 2019, Fig. 4, p. 570") + ": eco al letto o angio-TC d'urgenza " + pE(ESC.instab) + "; per AHA/ACC 2026 l'eco non conferma né esclude l'EP " + pA(AHA.eco) + ".");
+    L.push("Nel paziente ricoverato il D-dimero serve meno: il numero di pazienti da testare per un negativo utile sale" + pgs("ESC 2019, p. 572; Fig. 5 nota b, p. 571") + ".");
+    if (p.metodo === "wells") L.push("Le fasce di Wells sono messe sulle percentuali della figura per lettura dello strumento, salvo Wells &lt;2 = &lt;15%, che la Tab. 3 scrive. La Ginevra rivista non è calcolata: si usa la stima diretta.");
+    if (s.grav) L.push("<b>Gravidanza.</b> La fonte non colloca il PERC in gravidanza: lo strumento non lo applica, e con probabilità bassa va allo YEARS adattato (lettura prudente); la soglia età-corretta non si usa (Fig. 1, nota †); il ramo della CUS negativa non è descritto.");
+    L.push("Limiti di plausibilità dello strumento, non della fonte: FC 20–300/min, SpO₂ 50–100%, D-dimero 50–100000 μg/L, età fino a 120 anni. L'età minima di 18 anni viene invece dalla fonte, che parla di adulti" + pgs("AHA/ACC 2026, p. e983, n. 2–3") + ".");
+    el("limiti").innerHTML = "<li>" + L.join("</li><li>") + "</li>";
+
+    /* barra */
+    var bp = el("barProb"), be = el("barEsito");
+    bp.className = "cat " + (p.cat ? KPROB[p.cat] : "kx"); bp.innerHTML = p.cat ? mu(FASCIA[p.cat]) : "—";
+    var eb = ESITO[r.k] || ESITO.nd;
+    be.className = "cat " + eb[0]; be.innerHTML = eb[1];
+  }
+
+  document.addEventListener("input", disegna);
+  document.addEventListener("change", disegna);
+  el("azzera").addEventListener("click", function () {
+    var ins = document.querySelectorAll("input");
+    for (var i = 0; i < ins.length; i++) {
+      if (ins[i].type === "checkbox" || ins[i].type === "radio") ins[i].checked = false;
+      else ins[i].value = "";
+    }
+    disegna();
+    window.scrollTo(0, 0);
+  });
+
+  window.DIAGNOSI_MOTORE = { ramo:function (s) { return ramo(pulisci(s)); }, prob:prob, perc:perc, soglie:soglie };
+  disegna();
+})();
+</script>
+
+
+
+
+<script data-iphone="web">
+// Solo da un indirizzo https, cioe' dalla pagina pubblicata: aperto come file
+// il tool non cerca ne' manifest ne' service worker, che accanto al file non
+// ci sono. Un errore qui non deve fermare niente: e' un di piu'.
+(function(){
+if(location.protocol!=="https:") return;
+try{
+  var t=document.getElementsByTagName("head")[0];
+  var m=document.createElement("link"); m.rel="manifest"; m.href="manifest.webmanifest";
+  var i=document.createElement("link"); i.rel="apple-touch-icon"; i.href="icona-180.png";
+  t.appendChild(m); t.appendChild(i);
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js")["catch"](function(){});
+}catch(e){}
+})();
+</script>
+<script data-iphone="fine">document.documentElement.className+=" motore-ok";</script>
+</body>
+</html>
